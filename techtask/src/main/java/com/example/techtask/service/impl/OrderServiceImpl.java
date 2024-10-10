@@ -11,37 +11,29 @@ import com.example.techtask.service.OrderService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional (readOnly = true)
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
-	
-	@Autowired 
-	private final EntityManagerFactory em;
+
+	@PersistenceContext
+	private final EntityManager session;
 	
 	@Override
 	public Order findOrder() {
-		// Возвращать самый новый заказ, в котором больше одного предмета.
-		 EntityManager session = em.createEntityManager();
-		 session.getTransaction().begin();
-		 Order order = 
-				 session.createQuery("FROM Order WHERE quantity > 1 ORDER BY createdAt DESC LIMIT 1", Order.class)
-				 .getSingleResult();
-		session.getTransaction().commit();
-		return order;
+		return session.
+				createQuery("FROM Order WHERE quantity > 1 ORDER BY createdAt DESC LIMIT 1", Order.class).
+				getSingleResult();
 	}
 
 	@Override
 	public List<Order> findOrders() {
-		// Возвращать заказы от активных пользователей, отсортированные по дате создания.
-		EntityManager session = em.createEntityManager();
-		 session.getTransaction().begin();
 		 List<Order> orders = 
 				 session.createQuery("SELECT o FROM Order o JOIN User u ON u.id = o.userId WHERE u.userStatus = 'ACTIVE' ORDER BY createdAt", Order.class)
 				 .getResultList();	
-		session.getTransaction().commit();
 		return orders;
 	}
 
